@@ -335,7 +335,7 @@ node ace test functional --files="tests/functional/gateways"
 | **Payments** | 8 | Gateway 1, fallback Gateway 2, falha total, validações |
 | **Products** | 10 | CRUD completo, autenticação, 404 |
 | **Clients** | 5 | Listagem, detalhe com transações, 404 |
-| **Transactions** | 6 | Listagem, detalhe, cardLastNumbers, 404 |
+| **Transactions** | 10 | Listagem, detalhe, cardLastNumbers, 404 |
 | **Gateways** | 8 | Toggle, prioridade, ordenação, 404 |
 | **Total** | **50** | **50/50 passando ✅** |
 
