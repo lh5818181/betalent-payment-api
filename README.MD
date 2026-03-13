@@ -433,6 +433,37 @@ O projeto foi desenvolvido seguindo as boas práticas de desenvolvimento de APIs
 
 ---
 
+## ⚠️ Observações Importantes
+
+### Banco de Dados para Testes
+
+Os testes funcionais utilizam transações globais que são revertidas ao final de cada teste, mantendo o banco limpo. No entanto, **se houver dados reais no banco** (criados via API manualmente), o rollback pode falhar por restrições de chave estrangeira.
+
+**Recomendação:** Use um banco separado para testes criando um `.env.test`:
+```env
+DB_DATABASE=betalent_db_test
+```
+
+Ou limpe o banco antes de rodar os testes:
+```sql
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE transaction_products;
+TRUNCATE TABLE transactions;
+TRUNCATE TABLE gateways;
+TRUNCATE TABLE products;
+TRUNCATE TABLE clients;
+TRUNCATE TABLE users;
+TRUNCATE TABLE auth_access_tokens;
+SET FOREIGN_KEY_CHECKS = 1;
+```
+
+Depois rode o seeder novamente:
+```bash
+node ace db:seed
+```
+
+---
+
 ## 👨‍💻 Autor
 
 Desenvolvido por **Luís Henrique** como solução para o Teste Prático Back-end BeTalent.
