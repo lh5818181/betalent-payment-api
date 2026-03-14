@@ -9,6 +9,9 @@
 |
 */
 
+import dns from 'node:dns'
+dns.setDefaultResultOrder('ipv6first')
+
 await import('reflect-metadata')
 const { Ignitor, prettyPrintError } = await import('@adonisjs/core')
 
