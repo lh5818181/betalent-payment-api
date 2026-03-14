@@ -4,6 +4,7 @@ import Product from '#models/product'
 import Gateway from '#models/gateway'
 import Transaction from '#models/transaction'
 import Client from '#models/client'
+import env from '#start/env'
 import http from 'node:http'
 
 export default class PaymentService {
@@ -20,12 +21,17 @@ export default class PaymentService {
 
     for (const p of data.products) {
       const prod = await Product.findOrFail(p.id)
-      const subtotal = Number(prod.amount) * p.quantity
-      totalAmount += subtotal
+      totalAmount += Number(prod.amount) * p.quantity
       productsToSave.push({ id: prod.id, quantity: p.quantity })
     }
 
     const gateways = await Gateway.query().where('isActive', true).orderBy('priority', 'asc')
+
+    if (gateways.length === 0) {
+      const error: any = new Error('Nenhum gateway de pagamento ativo disponível.')
+      error.status = 503
+      throw error
+    }
 
     for (const gateway of gateways) {
       try {
@@ -59,23 +65,26 @@ export default class PaymentService {
             transactionId: transaction.id,
           }
         })
-      } catch (error) {
+      } catch (error: any) {
         console.warn(`[LOG] Falha no ${gateway.name}: ${error.message}`)
       }
     }
-    throw new Error('Pagamento recusado em todos os gateways.')
+
+    const error: any = new Error('Pagamento recusado em todos os gateways.')
+    error.status = 502
+    throw error
   }
 
   private async tryGateway1(amount: number, client: any, data: any) {
-    const auth = await this.api.post('http://127.0.0.1:3001/login', {
+    const auth = await this.api.post(`${env.get('GATEWAY1_URL')}/login`, {
       email: 'dev@betalent.tech',
       token: 'FEC9BB078BF338F464F96B48089EB498',
     })
 
     const res = await this.api.post(
-      'http://127.0.0.1:3001/transactions',
+      `${env.get('GATEWAY1_URL')}/transactions`,
       {
-        amount: amount,
+        amount,
         name: client.name,
         email: client.email,
         cardNumber: data.cardNumber,
@@ -86,13 +95,10 @@ export default class PaymentService {
 
     return { transactionId: res.data.id }
   }
-  private async tryGateway2(amount: number, client: any, data: any) {
-    if (data.cvv === '200') {
-      throw new Error('CVV rejeitado pelo Gateway 2')
-    }
 
+  private async tryGateway2(amount: number, client: any, data: any) {
     const res = await this.api.post(
-      'http://127.0.0.1:3002/transacoes',
+      `${env.get('GATEWAY2_URL')}/transacoes`,
       {
         valor: amount,
         nome: client.name,

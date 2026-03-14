@@ -16,12 +16,19 @@ export default class PaymentsController {
     } catch (error: any) {
       if (error.code === 'E_ROW_NOT_FOUND' || error.status === 404) {
         return response.notFound({
-          message: 'Cliente não encontrado',
+          message: 'Cliente ou produto não encontrado.',
         })
       }
 
-      return response.badRequest({
-        message: 'Não foi possível processar o pagamento em nenhum dos provedores.',
+      if (error.status === 503) {
+        return response.serviceUnavailable({
+          message: error.message,
+        })
+      }
+
+      // 502 — falha em todos os gateways externos
+      return response.status(502).json({
+        message: 'Pagamento recusado em todos os gateways de pagamento.',
         error: error.message,
       })
     }
